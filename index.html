@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LETRA Y MÁS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <link rel="stylesheet" href="estilo.css">
+  <script src="compra.js" defer></script>
+</head>
+<body>
+
+<header class="encabezado">
+  <div class="barra-superior">
+    <a class="marca" href="#">
+      <img src="img/letra_y_mas.jpeg" alt="Logo" onerror="this.style.display='none'">
+      <span></span>
+    </a>
+
+    <div class="busqueda">
+      <span class="material-symbols-outlined">search</span>
+      <input type="search" id="buscador" placeholder="Buscar producto...">
+    </div>
+
+    <button class="boton-resumen" id="boton-resumen" type="button">
+      <span class="material-symbols-outlined">inventory</span>
+      Resumen
+    </button>
+  </div>
+
+  <section class="panel-resumen oculto" id="panel-resumen">
+    <div class="resumen-cabecera">
+      <div>
+        <h2>Resumen de inventario y ventas</h2>
+        <p>Existencias actuales, unidades vendidas y dinero registrado.</p>
+      </div>
+      <button id="cerrar-resumen" class="boton-cerrar" type="button">✕</button>
+    </div>
+
+    <div class="estadisticas-resumen">
+      <div class="dato-resumen">
+        <span>Productos registrados</span>
+        <strong id="resumen-productos">0</strong>
+      </div>
+      <div class="dato-resumen">
+        <span>Unidades disponibles</span>
+        <strong id="resumen-disponibles">0</strong>
+      </div>
+      <div class="dato-resumen">
+        <span>Unidades vendidas</span>
+        <strong id="resumen-vendidas">0</strong>
+      </div>
+      <div class="dato-resumen">
+        <span>Compras registradas</span>
+        <strong id="resumen-compras">0</strong>
+      </div>
+      <div class="dato-resumen dato-dinero">
+        <span>Total de dinero vendido</span>
+        <strong id="resumen-dinero">Q 0.00</strong>
+      </div>
+    </div>
+
+    <h3>Existencias de productos</h3>
+    <div class="tabla-contenedor">
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Disponible</th>
+            <th>Precio unitario</th>
+            <th>Valor del inventario</th>
+          </tr>
+        </thead>
+        <tbody id="lista-resumen"></tbody>
+      </table>
+    </div>
+
+    <p class="total-resumen" id="total-resumen"></p>
+
+    <h3>Historial de ventas</h3>
+    <div class="tabla-contenedor">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Producto vendido</th>
+            <th>Unidades</th>
+            <th>Precio unitario</th>
+            <th>Total de venta</th>
+          </tr>
+        </thead>
+        <tbody id="lista-ventas"></tbody>
+      </table>
+    </div>
+
+    <p class="descripcion-ventas" id="descripcion-ventas">
+      Todavía no se han registrado ventas.
+    </p>
+
+    <div class="exportar-resumen">
+      <label for="formato-exportacion">Formato para exportar:</label>
+      <select id="formato-exportacion">
+        <option value="word">Word</option>
+        <option value="excel">Excel</option>
+        <option value="pdf">PDF</option>
+      </select>
+
+      <button id="boton-exportar" class="boton-principal" type="button">
+        <span class="material-symbols-outlined">download</span>
+        Exportar resumen
+      </button>
+
+      <!-- NUEVO BOTÓN: REINICIAR SOLAMENTE LAS VENTAS -->
+      <button id="boton-reiniciar-venta" class="boton-reiniciar" type="button">
+        <span class="material-symbols-outlined">restart_alt</span>
+        Reiniciar venta
+      </button>
+    </div>
+
+    <p class="aviso-exportacion">
+      Seleccione el formato deseado o PDF para imprimir.
+      El resumen incluye el inventario y el historial de ventas.
+    </p>
+  </section>
+
+  <nav class="navegacion">
+    <a href="#">Inicio</a>
+    <a href="contenedor-productos">Productos</a>
+    <a href="#contenedor-productos">Teléfonos</a>
+    <a href="#contenedor-productos">Ofertas</a>
+    <a href="#pie">Contacto</a>
+  </nav>
+</header>
+
+<main class="principal">
+  <section class="presentacion">
+    <p class="etiqueta">TU TIENDA DE CONFIANZA</p>
+    <h1>Encuentra tu producto deseado</h1>
+    <p>Busca y consulta tu producto.</p>
+  </section>
+
+  <div class="fila-productos">
+    <div>
+      <h2>Productos disponibles</h2>
+      <p id="contador-productos">Cargando productos...</p>
+    </div>
+    <button id="abrir-formulario-producto" class="boton-principal" type="button">
+      ＋ Agregar producto
+    </button>
+  </div>
+
+  <section class="contenedor" id="contenedor-productos">
+    <article class="contenedor-tarjeta" data-id="original-1" data-stock="10">
+      <img src="img/telefono1.jpg" alt="iPhone 17 Pro Max" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>iPhone 17 Pro Max</h3>
+        <p>Teléfono inteligente de alto rendimiento.</p>
+        <p class="precio">Q 11,499 y Q 14,199</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-2" data-stock="10">
+      <img src="img/telefono2.jpeg" alt="Samsung Galaxy Z Fold5" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy Z Fold5</h3>
+        <p>Pantalla plegable y diseño moderno.</p>
+        <p class="precio">Q 116,000</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-3" data-stock="10">
+      <img src="img/telefono3.jpeg" alt="HONOR 400 Lite" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>HONOR 400 Lite</h3>
+        <p>Diseño elegante para el uso diario.</p>
+        <p class="precio">Q 2,499</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-4" data-stock="10">
+      <img src="img/telefono4.jpeg" alt="POCO F5" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>POCO F5</h3>
+        <p>Velocidad y rendimiento para tus aplicaciones.</p>
+        <p class="precio">Q 2,700</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-5" data-stock="10">
+      <img src="img/telefono5.jpeg" alt="POCO F5" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>POCO F5</h3>
+        <p>Potencia y almacenamiento para tu día a día.</p>
+        <p class="precio">Q 2,799</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-6" data-stock="10">
+      <img src="img/telefono6.jpeg" alt="Xiaomi 5G" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Xiaomi 5G</h3>
+        <p>Conectividad rápida y diseño práctico.</p>
+        <p class="precio">Q 3,800</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-7" data-stock="10">
+      <img src="img/telefono7.jpeg" alt="Samsung Galaxy A04e" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy A04e</h3>
+        <p>Una opción sencilla para todos los días.</p>
+        <p class="precio">Q 1,399</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-8" data-stock="10">
+      <img src="img/telefono8.jpeg" alt="Xiaomi 13 Ultra" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Xiaomi 13 Ultra</h3>
+        <p>Fotografía y rendimiento avanzado.</p>
+        <p class="precio">Q 1,399</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-9" data-stock="10">
+      <img src="img/telefono9.jpeg" alt="Samsung Galaxy A33 5G" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy A33 5G</h3>
+        <p>Pantalla amplia y conectividad 5G.</p>
+        <p class="precio">Q 2,000</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-10" data-stock="10">
+      <img src="img/telefono10.jpeg" alt="Samsung Galaxy A54 5G" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy A54 5G</h3>
+        <p>Un teléfono versátil para fotos y aplicaciones.</p>
+        <p class="precio">Q 2,800</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-11" data-stock="10">
+      <img src="img/telefono11.jpeg" alt="Samsung Galaxy A24" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy A24</h3>
+        <p>Uso diario con pantalla de gran tamaño.</p>
+        <p class="precio">Q 1,520</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-12" data-stock="10">
+      <img src="img/telefono12.jpeg" alt="Samsung Galaxy Z Fold4" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy Z Fold4</h3>
+        <p>Diseño plegable para trabajar y disfrutar.</p>
+        <p class="precio">Q 3,900.00</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-13" data-stock="10">
+      <img src="img/telefono13.jpeg" alt="Samsung Galaxy A54" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy A54</h3>
+        <p>Buen equilibrio entre cámara y rendimiento.</p>
+        <p class="precio">Q 2,999</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-14" data-stock="10">
+      <img src="img/telefono14.jpeg" alt="Samsung Galaxy A73 5G" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy A73 5G</h3>
+        <p>Pantalla amplia y funciones útiles.</p>
+        <p class="precio">Q 3,499</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-15" data-stock="10">
+      <img src="img/telefono15.jpeg" alt="Samsung Galaxy A54 5G" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy A54 5G</h3>
+        <p>Conectividad rápida y diseño moderno.</p>
+        <p class="precio">Q 2,999</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-16" data-stock="10">
+      <img src="img/telefono16.jpeg" alt="Samsung Galaxy F14 5G" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy F14 5G</h3>
+        <p>Conectividad 5G para tu rutina.</p>
+        <p class="precio">Q 1,699</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-17" data-stock="10">
+      <img src="img/telefono17.jpeg" alt="Samsung Galaxy F54 5G" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy F54 5G</h3>
+        <p>Un equipo práctico para distintas tareas.</p>
+        <p class="precio">Q 2,999</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-18" data-stock="10">
+      <img src="img/telefono18.jpeg" alt="Samsung Galaxy M04" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy M04</h3>
+        <p>Una opción económica para uso cotidiano.</p>
+        <p class="precio">Q 1,399</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-19" data-stock="10">
+      <img src="img/telefono19.jpeg" alt="Samsung Galaxy S24" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Samsung Galaxy S24</h3>
+        <p>Funciones avanzadas en un diseño compacto.</p>
+        <p class="precio">Q 8,999</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta" data-id="original-20" data-stock="10">
+      <img src="img/telefono20.jpeg" alt="Iphone 16 Promax" class="imagen-producto">
+      <div class="contenido-tarjeta">
+        <h3>Iphoe 16 Promax</h3>
+        <p>Teléfono premium con gran pantalla.</p>
+        <p class="precio">Q 17,000</p>
+      </div>
+    </article>
+
+    <article class="contenedor-tarjeta tarjeta-agregar" id="tarjeta-agregar-producto">
+      <span class="material-symbols-outlined icono-agregar">add_circle</span>
+      <h3>Agregar nuevo producto</h3>
+      <p>Incluye nombre, descripción, precio, existencias y una fotografía.</p>
+      <button id="abrir-formulario-producto-tarjeta" class="boton-principal" type="button">
+        Agregar producto
+      </button>
+    </article>
+  </section>
+
+  <section class="panel-formulario oculto" id="panel-nuevo-producto">
+    <div class="resumen-cabecera">
+      <div>
+        <h2>Agregar producto</h2>
+        <p>Completa los datos del producto.</p>
+      </div>
+      <button id="cerrar-formulario-producto" class="boton-cerrar" type="button">✕</button>
+    </div>
+
+    <form id="form-nuevo-producto">
+      <label>Nombre del producto
+        <input type="text" id="nuevo-nombre" required maxlength="100">
+      </label>
+
+      <label>Descripción
+        <textarea id="nuevo-descripcion" required rows="3" maxlength="500"></textarea>
+      </label>
+
+      <label>Precio en quetzales
+        <input type="number" id="nuevo-precio" required min="0.01" step="0.01">
+      </label>
+
+      <label>Cantidad disponible
+        <input type="number" id="nuevo-stock" required min="0" step="1" value="10">
+      </label>
+
+      <label>Foto del producto
+        <input type="file" id="nuevo-foto" accept="image/*">
+      </label>
+
+      <img id="vista-previa-producto" class="vista-previa oculto" alt="Vista previa">
+
+      <div class="acciones-formulario">
+        <button type="submit" class="boton-principal">Guardar producto</button>
+        <button type="button" id="cancelar-nuevo-producto" class="boton-secundario">Cancelar</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<footer id="pie">
+  <p>© <span id="anio"></span> LETRA Y MÁS...</p>
+</footer>
+
+</body>
+</html>
