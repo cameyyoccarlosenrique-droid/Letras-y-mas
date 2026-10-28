@@ -631,113 +631,322 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function actualizarResumen() {
-    listaResumen.replaceChildren();
-    listaVentas.replaceChildren();
+  listaResumen.replaceChildren();
+  listaVentas.replaceChildren();
 
-    const tarjetas = [
-      ...contenedor.querySelectorAll(".contenedor-tarjeta[data-id]")
-    ].filter(tarjeta => tarjeta.id !== "tarjeta-agregar-producto");
+  const tarjetas = [
+    ...contenedor.querySelectorAll(".contenedor-tarjeta[data-id]")
+  ].filter(tarjeta => tarjeta.id !== "tarjeta-agregar-producto");
 
-    let unidadesDisponibles = 0;
-    let valorInventario = 0;
+  let unidadesDisponibles = 0;
+  let valorInventario = 0;
 
-    tarjetas.forEach(tarjeta => {
-      const id = tarjeta.dataset.id;
-      const titulo = tarjeta.querySelector("h3");
-      const precioElemento = tarjeta.querySelector(".precio");
+  // RESUMEN DEL INVENTARIO
+  tarjetas.forEach(tarjeta => {
+    const id = tarjeta.dataset.id;
+    const titulo = tarjeta.querySelector("h3");
+    const precioElemento = tarjeta.querySelector(".precio");
 
-      const nombre = titulo ? titulo.textContent : "Producto";
-      const stock = obtenerStock(tarjeta, id);
-      const precio = precioNumerico(
-        precioElemento ? precioElemento.textContent : "0"
-      );
+    const nombre = titulo ? titulo.textContent.trim() : "Producto";
+    const stock = obtenerStock(tarjeta, id);
+    const precio = precioNumerico(
+      precioElemento ? precioElemento.textContent : "0"
+    );
 
-      unidadesDisponibles += stock;
-      valorInventario += stock * precio;
+    unidadesDisponibles += stock;
+    valorInventario += stock * precio;
 
-      const fila = document.createElement("tr");
+    const fila = document.createElement("tr");
 
-      fila.append(
-        crearElemento("td", "", nombre),
-        crearElemento("td", "", String(stock)),
-        crearElemento("td", "", formatoPrecio(precio)),
-        crearElemento("td", "", formatoPrecio(stock * precio))
-      );
-
-      listaResumen.appendChild(fila);
+    [
+      nombre,
+      String(stock),
+      formatoPrecio(precio),
+      formatoPrecio(stock * precio)
+    ].forEach(texto => {
+      fila.appendChild(crearElemento("td", "", texto));
     });
 
-    if (tarjetas.length === 0) {
-      const fila = document.createElement("tr");
-      const celda = crearElemento("td", "", "No hay productos registrados.");
-      celda.colSpan = 4;
-      fila.appendChild(celda);
-      listaResumen.appendChild(fila);
+    listaResumen.appendChild(fila);
+  });
+
+  if (tarjetas.length === 0) {
+    const fila = document.createElement("tr");
+    const celda = crearElemento("td", "", "No hay productos registrados.");
+    celda.colSpan = 4;
+    fila.appendChild(celda);
+    listaResumen.appendChild(fila);
+  }
+
+  // AGRUPAR LAS VENTAS POR PRODUCTO Y PRECIO UNITARIO
+  const ventasAgrupadas = new Map();
+
+  ventas.forEach(venta => {
+    const nombre = String(
+      venta.nombre || venta.producto || "Producto"
+    ).trim();
+
+    const precio = Number(
+      venta.precioUnitario ?? venta.precio ?? 0
+    );
+
+    const cantidad = Number(venta.cantidad ?? venta.unidades ?? 0);
+    const total = Number(venta.total ?? cantidad * precio);
+
+    const clave = nombre.toLocaleLowerCase("es") + "|" + precio;
+
+    if (!ventasAgrupadas.has(clave)) {
+      ventasAgrupadas.set(clave, {
+        nombre,
+        precio,
+        cantidad: 0,
+        total: 0,
+        fechas: []
+      });
     }
 
-    const unidadesVendidas = ventas.reduce(
-      (suma, venta) => suma + Number(venta.cantidad || 0), 0
+    const grupo = ventasAgrupadas.get(clave);
+
+    grupo.cantidad += cantidad;
+    grupo.total += total;
+
+    const fecha = venta.fecha || "Fecha no disponible";
+
+    // Conservar cada fecha de compra sin repetir fechas idénticas.
+    if (!grupo.fechas.includes(fecha)) {
+      grupo.fechas.push(fecha);
+    }
+  });
+
+  const unidadesVendidas = ventas.reduce(
+    (suma, venta) =>
+      suma + Number(venta.cantidad ?? venta.unidades ?? 0),
+    0
+  );
+
+  const dineroVendido = ventas.reduce(
+    (suma, venta) =>
+      suma + Number(
+        venta.total ??
+        (Number(venta.cantidad ?? venta.unidades ?? 0) *
+         Number(venta.precioUnitario ?? venta.precio ?? 0))
+      ),
+    0
+  );
+
+  // MOSTRAR UNA FILA POR PRODUCTO Y PRECIO
+  ventasAgrupadas.forEach((grupo, clave) => {
+  const fila = document.createElement("tr");
+
+  const valores = [
+    grupo.fechas.join("\n"),
+    grupo.nombre,
+    String(grupo.cantidad),
+    formatoPrecio(grupo.precio),
+    formatoPrecio(grupo.total)
+  ];
+
+  valores.forEach((valor, indice) => {
+    const celda = crearElemento("td", "", valor);
+
+    if (indice === 0) {
+      celda.style.whiteSpace = "pre-line";
+    }
+
+    fila.appendChild(celda);
+  });
+
+  // Botón X al lado de esta fila
+  const celdaEliminar = document.createElement("td");
+  const botonX = document.createElement("button");
+
+  botonX.type = "button";
+  botonX.textContent = "X";
+  botonX.title = "Eliminar este producto del historial";
+
+  botonX.style.backgroundColor = "#dc2626";
+  botonX.style.color = "white";
+  botonX.style.border = "none";
+  botonX.style.borderRadius = "5px";
+  botonX.style.padding = "6px 11px";
+  botonX.style.cursor = "pointer";
+  botonX.style.fontWeight = "bold";
+
+  botonX.addEventListener("click", () => {
+  if (!confirm(
+    `¿Eliminar toda la fila de "${grupo.nombre}" y devolver las unidades a la tienda?`
+  )) {
+    return;
+  }
+
+  const nombreGrupo = grupo.nombre.trim().toLocaleLowerCase("es");
+  const precioGrupo = Number(grupo.precio);
+
+  const ventasAnteriores = [...ventas];
+
+  // Identificar todas las ventas que aparecen en esta fila.
+  const ventasEliminadas = ventas.filter(venta => {
+    const nombreVenta = String(
+      venta.nombre || venta.producto || "Producto"
+    ).trim().toLocaleLowerCase("es");
+
+    const precioVenta = Number(
+      venta.precioUnitario ?? venta.precio ?? 0
     );
 
-    const dineroVendido = ventas.reduce(
-      (suma, venta) => suma + Number(venta.total || 0), 0
-    );
+    return nombreVenta === nombreGrupo &&
+           precioVenta === precioGrupo;
+  });
 
-    document.getElementById("resumen-productos").textContent =
-      tarjetas.length;
+  if (ventasEliminadas.length === 0) return;
 
-    document.getElementById("resumen-disponibles").textContent =
-      unidadesDisponibles;
+  // Sumar las unidades que deben regresar por cada producto.
+  const devoluciones = new Map();
 
-    document.getElementById("resumen-vendidas").textContent =
-      unidadesVendidas;
+  for (const venta of ventasEliminadas) {
+    const idProducto = venta.productoId;
+    const cantidad = Number(venta.cantidad ?? venta.unidades ?? 0);
 
-    document.getElementById("resumen-compras").textContent =
-      ventas.length;
-
-    document.getElementById("resumen-dinero").textContent =
-      formatoPrecio(dineroVendido);
-
-    totalResumen.textContent =
-      `Productos registrados: ${tarjetas.length} · ` +
-      `Unidades disponibles: ${unidadesDisponibles} · ` +
-      `Valor actual del inventario: ${formatoPrecio(valorInventario)}`;
-
-    if (ventas.length === 0) {
-      const fila = document.createElement("tr");
-      const celda = crearElemento("td", "", "Todavía no hay ventas registradas.");
-      celda.colSpan = 5;
-      fila.appendChild(celda);
-      listaVentas.appendChild(fila);
-
-      descripcionVentas.textContent =
-        "Todavía no se han registrado ventas. Cuando registres una compra, " +
-        "aquí aparecerán las unidades vendidas y el dinero acumulado.";
+    if (!idProducto || !Number.isFinite(cantidad) || cantidad <= 0) {
+      alert(
+        "Una venta no tiene un ID de producto o una cantidad válida. " +
+        "No se realizaron cambios."
+      );
       return;
     }
 
-    [...ventas].reverse().forEach(venta => {
-      const fila = document.createElement("tr");
+    devoluciones.set(
+      idProducto,
+      (devoluciones.get(idProducto) || 0) + cantidad
+    );
+  }
 
-      fila.append(
-        crearElemento("td", "", venta.fecha || ""),
-        crearElemento("td", "", venta.nombre || venta.producto || ""),
-        crearElemento("td", "", String(venta.cantidad || 0)),
-        crearElemento(
-          "td", "",
-          formatoPrecio(venta.precioUnitario ?? venta.precio ?? 0)
-        ),
-        crearElemento("td", "", formatoPrecio(venta.total || 0))
+  // Encontrar las tarjetas y guardar las existencias anteriores.
+  const productosParaActualizar = [];
+
+  for (const [idProducto, cantidad] of devoluciones) {
+    const tarjeta = [
+      ...contenedor.querySelectorAll(".contenedor-tarjeta[data-id]")
+    ].find(item => item.dataset.id === String(idProducto));
+
+    if (!tarjeta) {
+      alert(
+        `No se encontró la tarjeta de "${grupo.nombre}". ` +
+        "No se eliminará el historial."
       );
+      return;
+    }
 
-      listaVentas.appendChild(fila);
+    productosParaActualizar.push({
+      tarjeta,
+      idProducto,
+      cantidad,
+      stockAnterior: obtenerStock(tarjeta, idProducto)
+    });
+  }
+
+  // Devolver las unidades al inventario guardado.
+  const productosGuardados = [];
+
+  for (const producto of productosParaActualizar) {
+    const nuevoStock = producto.stockAnterior + producto.cantidad;
+
+    if (!guardarStock(producto.idProducto, nuevoStock)) {
+      // Restaurar las existencias si ocurre un error.
+      productosGuardados.reverse().forEach(item => {
+        guardarStock(item.idProducto, item.stockAnterior);
+      });
+
+      alert(
+        "No se pudieron actualizar todas las existencias. " +
+        "El historial se conservará."
+      );
+      return;
+    }
+
+    productosGuardados.push(producto);
+  }
+
+  // Quitar del historial todas las ventas de esta fila.
+  ventas = ventas.filter(venta => !ventasEliminadas.includes(venta));
+
+  if (!guardar(CLAVES.ventas, ventas)) {
+    ventas = ventasAnteriores;
+
+    productosGuardados.reverse().forEach(item => {
+      guardarStock(item.idProducto, item.stockAnterior);
     });
 
-    descripcionVentas.textContent =
-      `Descripción de ventas: se han vendido ${unidadesVendidas} unidad(es) ` +
-      `en ${ventas.length} compra(s). El total acumulado de dinero vendido ` +
-      `es ${formatoPrecio(dineroVendido)}.`;
+    alert(
+      "No se pudo guardar el historial. " +
+      "Se intentaron restaurar las existencias anteriores."
+    );
+    return;
   }
+
+  // ACTUALIZAR LAS TARJETAS CON SU ID CORRECTO.
+  productosParaActualizar.forEach(item => {
+    actualizarTarjeta(item.tarjeta, item.idProducto);
+  });
+
+  // Actualizar resumen y contador de productos.
+  actualizarResumen();
+  actualizarContador();
+  filtrarProductos();
+
+  alert(
+    `Se eliminó la fila de "${grupo.nombre}" y se devolvieron ` +
+    `${grupo.cantidad} unidad(es) al inventario.`
+  );
+});
+
+  celdaEliminar.appendChild(botonX);
+  fila.appendChild(celdaEliminar);
+  listaVentas.appendChild(fila);
+});
+
+  if (ventas.length === 0) {
+    const fila = document.createElement("tr");
+    const celda = crearElemento(
+      "td",
+      "",
+      "Todavía no hay ventas registradas."
+    );
+
+    celda.colSpan = 5;
+    fila.appendChild(celda);
+    listaVentas.appendChild(fila);
+  }
+
+  // ACTUALIZAR LAS ESTADÍSTICAS
+  document.getElementById("resumen-productos").textContent =
+    tarjetas.length;
+
+  document.getElementById("resumen-disponibles").textContent =
+    unidadesDisponibles;
+
+  document.getElementById("resumen-vendidas").textContent =
+    unidadesVendidas;
+
+  document.getElementById("resumen-compras").textContent =
+    ventas.length;
+
+  document.getElementById("resumen-dinero").textContent =
+    formatoPrecio(dineroVendido);
+
+  totalResumen.textContent =
+    `Productos registrados: ${tarjetas.length} · ` +
+    `Unidades disponibles: ${unidadesDisponibles} · ` +
+    `Valor actual del inventario: ${formatoPrecio(valorInventario)}`;
+
+  if (descripcionVentas) {
+    descripcionVentas.textContent = ventas.length === 0
+      ? "Todavía no se han registrado ventas."
+      : `Se vendieron ${unidadesVendidas} unidad(es) en ` +
+        `${ventas.length} compra(s). Total vendido: ` +
+        formatoPrecio(dineroVendido) + ".";
+  }
+}
 
   function actualizarContador() {
     const tarjetas = [
@@ -1013,6 +1222,8 @@ document.addEventListener("DOMContentLoaded", () => {
     enlace.remove();
 
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    
   }
 
   // Abrir y cerrar el resumen.
@@ -1173,9 +1384,199 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // ==========================================
+  // VISTA PREVIA AL SELECCIONAR UN PRODUCTO
+  // ==========================================
+
+  const panelVistaProducto = document.createElement("aside");
+  panelVistaProducto.id = "panel-vista-producto";
+  panelVistaProducto.className = "panel-vista-producto oculto";
+  panelVistaProducto.setAttribute("aria-label", "Vista previa del producto");
+
+  panelVistaProducto.innerHTML = `
+    <div class="cabecera-vista-producto">
+      <h2>Detalle del producto</h2>
+      <button
+        type="button"
+        class="cerrar-vista-producto"
+        aria-label="Cerrar vista previa"
+      >×</button>
+    </div>
+
+    <img class="imagen-vista-producto" alt="Imagen del producto">
+
+    <h3 class="nombre-vista-producto"></h3>
+    <p class="descripcion-vista-producto"></p>
+    <p class="precio-vista-producto"></p>
+    <p class="stock-vista-producto"></p>
+
+    <button type="button" class="boton-vista-comprar">
+      Comprar este producto
+    </button>
+  `;
+
+  document.body.appendChild(panelVistaProducto);
+
+  const imagenVista = panelVistaProducto.querySelector(
+    ".imagen-vista-producto"
+  );
+
+  const nombreVista = panelVistaProducto.querySelector(
+    ".nombre-vista-producto"
+  );
+
+  const descripcionVista = panelVistaProducto.querySelector(
+    ".descripcion-vista-producto"
+  );
+
+  const precioVista = panelVistaProducto.querySelector(
+    ".precio-vista-producto"
+  );
+
+  const stockVista = panelVistaProducto.querySelector(
+    ".stock-vista-producto"
+  );
+
+  const botonComprarVista = panelVistaProducto.querySelector(
+    ".boton-vista-comprar"
+  );
+
+  let tarjetaVistaActual = null;
+
+  function cerrarVistaProducto() {
+    panelVistaProducto.classList.add("oculto");
+
+    if (tarjetaVistaActual) {
+      tarjetaVistaActual.classList.remove("tarjeta-seleccionada");
+    }
+
+    tarjetaVistaActual = null;
+  }
+
+  function abrirVistaProducto(tarjeta) {
+    if (
+      !tarjeta ||
+      tarjeta.id === "tarjeta-agregar-producto" ||
+      !tarjeta.querySelector("h3")
+    ) {
+      return;
+    }
+
+    if (tarjetaVistaActual) {
+      tarjetaVistaActual.classList.remove("tarjeta-seleccionada");
+    }
+
+    tarjetaVistaActual = tarjeta;
+    tarjetaVistaActual.classList.add("tarjeta-seleccionada");
+
+    const imagen = tarjeta.querySelector(".imagen-producto");
+    const nombre = tarjeta.querySelector("h3");
+    const descripcion = tarjeta.querySelector(
+      ".contenido-tarjeta p:not(.precio)"
+    );
+    const precio = tarjeta.querySelector(".precio");
+
+    nombreVista.textContent = nombre
+      ? nombre.textContent.trim()
+      : "Producto";
+
+    descripcionVista.textContent = descripcion
+      ? descripcion.textContent.trim()
+      : "Sin descripción disponible.";
+
+    precioVista.textContent = precio
+      ? precio.textContent.trim()
+      : "Precio no disponible";
+
+    if (imagen) {
+      imagenVista.src = imagen.src;
+      imagenVista.alt = imagen.alt || nombreVista.textContent;
+      imagenVista.style.display = "block";
+    } else {
+      imagenVista.removeAttribute("src");
+      imagenVista.alt = "";
+      imagenVista.style.display = "none";
+    }
+
+    const stock = obtenerStock(tarjeta, tarjeta.dataset.id);
+
+    stockVista.textContent = stock > 0
+      ? `Disponibles: ${stock}`
+      : "Producto agotado";
+
+    stockVista.classList.toggle("agotado", stock <= 0);
+
+    botonComprarVista.disabled = stock <= 0;
+    botonComprarVista.textContent = stock > 0
+      ? "Comprar este producto"
+      : "Producto agotado";
+
+    panelVistaProducto.classList.remove("oculto");
+  }
+
+  // Seleccionar una tarjeta abre su vista previa.
+  // Los botones y controles internos conservan su funcionamiento.
+  contenedor.addEventListener("click", evento => {
+    if (evento.target.closest(
+      "button, input, textarea, select, label, form"
+    )) {
+      return;
+    }
+
+    const tarjeta = evento.target.closest(
+      ".contenedor-tarjeta[data-id]"
+    );
+
+    if (tarjeta && contenedor.contains(tarjeta)) {
+      abrirVistaProducto(tarjeta);
+    }
+  });
+
+  // Cerrar la vista previa.
+  panelVistaProducto
+    .querySelector(".cerrar-vista-producto")
+    .addEventListener("click", cerrarVistaProducto);
+
+  // El botón de la vista previa utiliza la compra de la tarjeta
+  // original para conservar el control de existencias y ventas.
+  botonComprarVista.addEventListener("click", () => {
+    if (!tarjetaVistaActual) return;
+
+    const botonComprarOriginal = tarjetaVistaActual.querySelector(
+      ".boton-comprar"
+    );
+
+    const cantidadOriginal = tarjetaVistaActual.querySelector(
+      ".cantidad-compra"
+    );
+
+    if (!botonComprarOriginal || !cantidadOriginal) return;
+
+    if (botonComprarOriginal.disabled) {
+      alert("Este producto está agotado.");
+      return;
+    }
+
+    // La compra desde la vista previa utiliza una unidad.
+    cantidadOriginal.value = "1";
+    botonComprarOriginal.click();
+  });
+
+  // Cerrar con Escape.
+  document.addEventListener("keydown", evento => {
+    if (evento.key === "Escape") {
+      cerrarVistaProducto();
+    }
+  });
+
+  panelVistaProducto
+    .querySelector(".cerrar-vista-producto")
+    .addEventListener("click", cerrarVistaProducto);
+
   document.getElementById("anio").textContent =
     new Date().getFullYear();
 
   filtrarProductos();
   actualizarResumen();
 });
+

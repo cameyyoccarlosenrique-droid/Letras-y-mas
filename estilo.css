@@ -646,6 +646,8 @@ footer {
   }
 }
 
+
+
 @media (max-width: 560px) {
   .contenedor {
     grid-template-columns: 1fr;
@@ -761,4 +763,169 @@ footer {
   .dato-resumen {
     break-inside: avoid;
   }
+}
+
+/* ==========================================
+   VISTA PREVIA DEL PRODUCTO SELECCIONADO
+   ========================================== */
+
+.panel-vista-producto {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  width: min(390px, calc(100vw - 30px));
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 9999;
+  background: #FFFFFF;
+  border: 1px solid #DCE3EB;
+  border-radius: 18px;
+  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.25);
+  padding: 20px;
+  animation: aparecerVistaProducto 0.25s ease;
+}
+
+.panel-vista-producto.oculto {
+  display: none !important;
+}
+
+.cabecera-vista-producto {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.cabecera-vista-producto h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #20232A;
+}
+
+.cerrar-vista-producto {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #EDF2F7;
+  color: #20232A;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.cerrar-vista-producto:hover {
+  background: #DCE3EB;
+}
+
+.imagen-vista-producto {
+  display: block;
+  width: 100%;
+  height: 280px;
+  object-fit: contain;
+  padding: 10px;
+  background: #F5F8FC;
+  border-radius: 12px;
+  border: 1px solid #E6EBF1;
+}
+
+.nombre-vista-producto {
+  margin: 18px 0 8px;
+  font-size: 1.35rem;
+  color: #20232A;
+  overflow-wrap: anywhere;
+}
+
+.descripcion-vista-producto {
+  color: #536477;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.precio-vista-producto {
+  color: #B80000;
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 15px 0;
+  overflow-wrap: anywhere;
+}
+
+.stock-vista-producto {
+  color: #04351C;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+.stock-vista-producto.agotado {
+  color: #D93636;
+}
+
+.panel-vista-producto .boton-vista-comprar {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #00AAFF;
+  color: #052033;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.panel-vista-producto .boton-vista-comprar:hover {
+  background: #008FD8;
+}
+
+.tarjeta-seleccionada {
+  outline: 3px solid #00AAFF;
+  outline-offset: 2px;
+}
+
+@keyframes aparecerVistaProducto {
+  from {
+    opacity: 0;
+    transform: translate(15px, -50%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+}
+
+@media (max-width: 560px) {
+  .panel-vista-producto {
+    right: 10px;
+    width: calc(100vw - 20px);
+    max-height: 85vh;
+    padding: 15px;
+  }
+
+  .imagen-vista-producto {
+    height: 230px;
+  }
+}
+
+/* Botón para cerrar la vista previa del producto */
+.cerrar-vista-producto {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: #f1f3f5;
+    color: #20232A;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s, color 0.2s;
+}
+
+.cerrar-vista-producto:hover {
+    background: #ff3333;
+    color: white;
 }
